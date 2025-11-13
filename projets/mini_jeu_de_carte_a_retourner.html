@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="author" content="AGBO Juste">
+<meta name="date" content="2025-11-11">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mini-jeu de cartes à deviner</title>
+<style>
+  :root{
+    --bg:#ffffff; --panel:#ffffff; --text:#0f172a; --muted:#6b7280;
+    --accent:#38bdf8; --accent-900:#0891b2; --line:#e5e7eb;
+    --shadow:0 12px 28px rgba(2,8,23,.10);
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{min-height:100vh; display:grid; place-items:center; padding:28px;
+       font-family:Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+       color:var(--text); background:var(--bg);}
+  .wrap{width:min(1000px,96%); display:grid; grid-template-columns:320px 1fr; gap:20px}
+  @media(max-width:900px){ .wrap{grid-template-columns:1fr} }
+
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:var(--shadow)}
+  h1{margin:6px 0 2px}
+  .sub{margin:0 0 12px; color:var(--muted)}
+  .stats{display:flex; gap:10px; margin:10px 0; flex-wrap:wrap}
+  .stat{flex:1 1 90px; background:#f0f9ff; border:1px solid #cdeffd; border-radius:12px; padding:10px}
+  .stat small{color:#6b7c92}
+  .n{font-weight:700; font-size:1.2rem}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px;
+       padding:12px 16px; border-radius:12px; font-weight:700; cursor:pointer;
+       border:2px solid var(--accent); color:#054055; background:var(--accent)}
+  .btn:hover{background:var(--accent-900); border-color:var(--accent-900); color:#fff}
+  .btn.ghost{background:#fff; color:var(--accent); border-color:var(--accent)}
+  .btn.ghost:hover{background:#e6f6ff}
+
+  .board{position:relative; background:var(--panel); border:1px solid var(--line);
+         border-radius:18px; padding:18px; box-shadow:var(--shadow)}
+  .grid{position:relative; z-index:1; display:grid; grid-template-columns:repeat(4, 1fr);
+        gap:14px; min-height:520px}
+  @media(max-width:600px){ .grid{grid-template-columns:repeat(3,1fr)} }
+
+  .card{position:relative; height:120px; border-radius:14px; perspective:1000px;
+        cursor:pointer; outline:none}
+  .inner{position:absolute; inset:0; transition: transform .5s ease; transform-style:preserve-3d}
+  .card.flip .inner{ transform: rotateY(180deg) }
+
+  .front{position:absolute; inset:0; border-radius:14px; display:grid; place-items:center;
+         backface-visibility:hidden; user-select:none;
+         background:#f0faff; border:1px solid #cbeefd;}
+  .back{ position:absolute; inset:0; border-radius:14px; display:grid; place-items:center;
+         backface-visibility:hidden; user-select:none;
+         transform:rotateY(180deg);
+         font-size:42px; background:#fff; border:1px solid #b7e9fb; }
+
+  .matched .front{ background:#e6fffa; border-color:#baf3e2 }
+  .stars{color:#fbbf24; letter-spacing:2px; margin-left:6px}
+
+  .overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+           background:rgba(255,255,255,.94); backdrop-filter:blur(3px);
+           border-radius:18px; z-index:50}
+  .overlay.hidden{ display:none !important; }
+  .card-modal{width:min(520px,92%); background:#fff; border:1px solid var(--line);
+              border-radius:16px; padding:22px; text-align:center; box-shadow:var(--shadow)}
+  .toast{position:fixed; left:50%; top:14px; transform:translateX(-50%);
+         background:#0891b2; color:#fff; padding:10px 14px; border-radius:12px;
+         box-shadow:var(--shadow); font-weight:600; opacity:0; animation:fade .9s ease forwards}
+  @keyframes fade{0%{opacity:0; transform:translate(-50%, -8px)}100%{opacity:1; transform:translate(-50%, 0)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="panel">
+    <h1>Memory Match 🎗️</h1>
+    <p class="sub">Retourne les cartes par paires. Moins de coups = meilleure note ⭐.</p>
+
+    <div class="stats">
+      <div class="stat"><small>Coups</small><div class="n" id="moves">0</div></div>
+      <div class="stat"><small>Temps</small><div class="n" id="time">00:00</div></div>
+      <div class="stat"><small>Étoiles</small><div class="n"><span class="stars" id="stars">★★★</span></div></div>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap">
+      <button class="btn" id="newGame">Nouvelle partie</button>
+      <button class="btn ghost" id="reshuffle">Re-mélanger</button>
+    </div>
+  </aside>
+
+  <section class="board">
+    <div class="overlay" id="overlay">
+      <div class="card-modal">
+        <h2>Prêt ?</h2>
+        <p>Observe bien les cartes pendant 1,5 seconde puis mémorise-les !</p>
+        <button class="btn" id="startBtn">Commencer</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+
+<script>
+  const grid = document.getElementById('grid');
+  const movesEl = document.getElementById('moves');
+  const timeEl  = document.getElementById('time');
+  const starsEl = document.getElementById('stars');
+  const newBtn  = document.getElementById('newGame');
+  const reshuffleBtn = document.getElementById('reshuffle');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+
+  const ICONS = ['🐳','🛰','💎','🚀','🧊','🎯','🌊','🧩'];
+  let deck=[],first=null,lock=false,moves=0,matched=0,timer=null,sec=0,started=false;
+
+  const format = t => `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const rating=_=>moves<=16?'★★★':moves<=22?'★★☆':'★☆☆';
+  function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),900);}
+
+  function buildDeck(){deck=shuffle([...ICONS,...ICONS]).map((icon,idx)=>({id:idx,icon,found:false}));}
+  function render(){
+    grid.innerHTML='';
+    deck.forEach(card=>{
+      const c=document.createElement('div'); c.className='card'; c.tabIndex=0; c.dataset.id=card.id;
+      c.innerHTML=`
+        <div class="inner">
+          <div class="front"></div>
+          <div class="back"><span>${card.icon}</span></div>
+        </div>`;
+      grid.appendChild(c);
+    });
+  }
+
+  function startTimer(){clearInterval(timer);sec=0;timeEl.textContent='00:00';
+    timer=setInterval(()=>{sec++;timeEl.textContent=format(sec);},1000);}
+  function reset(showOverlay=true){
+    buildDeck();render();
+    first=null;lock=false;moves=0;matched=0;movesEl.textContent='0';
+    starsEl.textContent='★★★';started=false;
+    clearInterval(timer);timeEl.textContent='00:00';
+    if(showOverlay)overlay.classList.remove('hidden');
+  }
+
+  function begin(){
+    if(started)return;
+    started=true;
+    overlay.classList.add('hidden');
+    startTimer();
+    
+    const all=[...document.querySelectorAll('.card')];
+    all.forEach(c=>c.classList.add('flip'));
+    setTimeout(()=>all.forEach(c=>c.classList.remove('flip')),1500);
+  }
+
+  function flip(cardEl){
+    if(lock||!started)return;
+    const id=+cardEl.dataset.id;
+    const card=deck.find(c=>c.id===id);
+    if(card.found||cardEl.classList.contains('flip'))return;
+
+    cardEl.classList.add('flip');
+    if(!first){first=cardEl;return;}
+
+    moves++;movesEl.textContent=moves;starsEl.textContent=rating();
+    const firstId=+first.dataset.id;
+    const a=deck.find(c=>c.id===firstId),b=card;
+    if(a.icon===b.icon){
+      a.found=b.found=true;matched+=2;toast('✔');
+      first=null;if(matched===deck.length){clearInterval(timer);setTimeout(end,350);}
+    }else{
+      lock=true;
+      setTimeout(()=>{first.classList.remove('flip');cardEl.classList.remove('flip');first=null;lock=false;toast('✖');},650);
+    }
+  }
+
+  function end(){
+    overlay.classList.remove('hidden');
+    overlay.querySelector('.card-modal').innerHTML=`
+      <h2>Bravo !</h2>
+      <p>Temps : <strong>${format(sec)}</strong> — Coups : <strong>${moves}</strong> — Note : <strong>${rating()}</strong></p>
+      <button class="btn" id="again">Rejouer</button>`;
+    overlay.querySelector('#again').addEventListener('click',()=>{reset(false);begin();});
+  }
+
+  grid.addEventListener('click',e=>{const cardEl=e.target.closest('.card');if(!cardEl)return;flip(cardEl);});
+  newBtn.addEventListener('click',()=>reset(true));
+  reshuffleBtn.addEventListener('click',()=>{deck=shuffle(deck);render();});
+  startBtn.addEventListener('click',begin);
+
+  reset(true);
+
+</script>
+<div style="text-align:center;margin-top:10px;">
+    <a href="../index.html" class="btn">Retour à l'accueil</a>
+  </div>
+
+   <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__content">
+      <small>Designed by <span class="accent">Juste AGBO</span> with HTML, CSS, JS</small>
+      <small>Tous droits réservés — 2025</small>
+    </div>
+  </footer>
+</body>
+</html>

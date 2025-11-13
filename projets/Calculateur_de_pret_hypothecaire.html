@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="author" content="AGBO Juste">
+  <meta name="date" content="2025-11-11">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculateur de prêt hypothécaire</title>
+  <style>
+    :root{
+      --sky:#e6f3ff;
+      --sky-strong:#58a6ff;
+      --ink:#0f172a;
+      --muted:#475569;
+      --card:#ffffff;
+      --ring:#a3d3ff;
+      --shadow:0 15px 25px rgba(24, 93, 179, .12);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+      color:var(--ink);
+      background:linear-gradient(180deg, var(--sky) 0%, #f7fbff 60%);
+    }
+
+    .container{
+      max-width:880px;
+      margin: clamp(24px, 6vh, 80px) auto;
+      padding: 0 16px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      padding: clamp(18px, 4vw, 32px);
+      box-shadow: var(--shadow);
+      border:1px solid #f0f6ff;
+    }
+
+    h1{
+      margin:0 0 18px 0;
+      font-size: clamp(1.3rem, 2.5vw, 2rem);
+      color:#0b3d91;
+      text-align:center;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:16px;
+    }
+    @media (max-width:760px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .field span{
+      font-weight:600;
+      color:var(--muted);
+    }
+
+    input{
+      width:100%;
+      padding:14px 12px;
+      border-radius:12px;
+      border:1.5px solid #cfe6ff;
+      background:#fbfdff;
+      outline:none;
+      transition:.2s border-color, .2s box-shadow;
+      font-size:16px;
+    }
+    input:focus{
+      border-color:var(--sky-strong);
+      box-shadow:0 0 0 4px var(--ring);
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      margin-top:16px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      padding:12px 18px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      letter-spacing:.2px;
+      transition:.15s transform, .15s box-shadow, .15s background;
+    }
+
+    .btn.primary{
+      background:linear-gradient(180deg, #7ec3ff, #4ea7ff);
+      color:white;
+      box-shadow:0 8px 18px rgba(64,140,255,.25);
+    }
+    .btn.primary:hover{ transform:translateY(-1px) }
+
+    .btn.secondary{
+      background:#eef6ff;
+      color:#0b3d91;
+      border:1px solid #d8eaff;
+    }
+    .btn.secondary:hover{ background:#e2f0ff }
+
+    .result{
+      margin-top:18px;
+      border-top:1px dashed #d8eaff;
+      padding-top:14px;
+    }
+    .hidden{ display:none }
+
+    .big{
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      margin:0 0 10px 0;
+      text-align:center;
+    }
+
+    .details p{
+      margin:.25rem 0;
+      color:#0b3d91;
+    }
+    .details small{
+      color:#64748b;
+    }
+
+      /* Pied de page */
+.footer{background:skyblue;color:#e5e7eb}
+.footer__content{display:flex;justify-content:space-between;align-items:center;height:60px}
+@media(max-width:600px){.footer__content{flex-direction:column;gap:6px;height:auto;padding:10px 0}}
+.accent{color:#0369a1;font-weight:600}  
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h1>Calculateur de prêt hypothécaire</h1>
+
+      <form id="loan-form" novalidate>
+        <div class="grid">
+          <label class="field">
+            <span>Montant du prêt (P)</span>
+            <input id="principal" type="number" step="0.01" min="0" placeholder="Ex. 150000" required>
+          </label>
+
+          <label class="field">
+            <span>Taux d’intérêt annuel (%)</span>
+            <input id="annual" type="number" step="0.01" min="0" max="100" placeholder="Ex. 6" required>
+          </label>
+
+          <label class="field">
+            <span>Durée (années)</span>
+            <input id="years" type="number" step="1" min="1" placeholder="Ex. 20" required>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn primary">Calculer</button>
+          <button type="reset" class="btn secondary" id="reset">Réinitialiser</button>
+        </div>
+      </form>
+
+      <div id="result" class="result hidden" role="status" aria-live="polite">
+        <p class="big"><strong>Paiement mensuel (M)</strong> : <span id="monthly">—</span></p>
+        <div class="details">
+          <p>Total sur la période : <span id="total">—</span></p>
+          <p>Dont intérêts : <span id="interest">—</span></p>
+          <p><small>Formule : M = P × [ r × (1+r)<sup>n</sup> ] / [ (1+r)<sup>n</sup> − 1 ] avec r = taux mensuel, n = nombre de mensualités.</small></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const form = $("loan-form");
+    const resBox = $("result");
+    const outMonthly = $("monthly");
+    const outTotal = $("total");
+    const outInterest = $("interest");
+
+    function fmtMoney(x) {
+      try {
+        return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
+      } catch {
+        return (Math.round(x * 100) / 100).toFixed(2);
+      }
+    }
+
+    function paiementMensuel(P, annualRatePct, years) {
+      const n = Math.round(years * 12);
+      if (n <= 0) throw new Error("La durée doit être > 0.");
+
+      const r = (annualRatePct / 100) / 12;
+
+      if (r === 0) return P / n;
+
+      const pow = Math.pow(1 + r, n);
+      return P * (r * pow) / (pow - 1);
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const P = parseFloat($("principal").value);
+      const annual = parseFloat($("annual").value);
+      const years = parseFloat($("years").value);
+
+      if (Number.isNaN(P) || P <= 0) return alert("Veuillez saisir un montant de prêt positif.");
+      if (Number.isNaN(annual) || annual < 0 || annual > 100) return alert("Veuillez saisir un taux annuel valide (0–100%).");
+      if (Number.isNaN(years) || years <= 0) return alert("Veuillez saisir une durée en années (> 0).");
+
+      const n = Math.round(years * 12);
+      const M = paiementMensuel(P, annual, years);
+      const total = M * n;
+      const interest = total - P;
+
+      outMonthly.textContent = fmtMoney(M) + " FCFA";
+      outTotal.textContent = fmtMoney(total) + " FCFA";
+      outInterest.textContent = fmtMoney(interest) + " FCFA";
+
+      resBox.classList.remove("hidden");
+    });
+
+    $("reset").addEventListener("click", () => {
+      resBox.classList.add("hidden");
+      outMonthly.textContent = outTotal.textContent = outInterest.textContent = "—";
+    });
+  </script>
+  <div style="text-align:center;margin-top:40px;">
+    <a href="../index.html" class="btn">Retour à l'accueil</a>
+  </div>
+
+   <!-- Pied de page -->
+  <footer class="footer">
+    <div class="container footer__content">
+      <small>Designed by <span class="accent">Juste AGBO</span> with HTML, CSS, JS</small>
+      <small>Tous droits réservés — 2025</small>
+    </div>
+  </footer>
+</body>
+</html>

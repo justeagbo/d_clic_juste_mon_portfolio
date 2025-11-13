@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="author" content="AGBO Juste">
+  <meta name="date" content="2024-11-11">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mon portfolio</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Barre supérieure -->
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">AGBO <span></span> Juste</div>
+      <nav id="mainNav">
+        <a href="#home" class="active">Accueil</a>
+        <a href="#about">À propos</a>
+        <a href="#projects">Projets</a>
+        <a href="#skills">Compétences</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <main id="home">
+    <!-- Hero -->
+    <section class="hero container">
+      <div class="hero__text">
+        <h1>Je suis <span class="accent">Juste</span>, étudiant en hydrologie quantitative et Développeur en devenir passionné par le web et le design !</h1>
+        <a href="#projects" class="btn btn-accent">Voir mes projets</a>
+      </div>
+      <div class="hero__image">
+        <img src="images\photo2.jpg" alt="Illustration développeur"/>
+      </div>
+    </section>
+
+    <!-- À propos -->
+    <section id="about" class="section section-muted">
+      <div class="container about">
+        <div class="about__text">
+          <h2 class="section-title">À propos</h2>
+          <p>Je m'appelle <strong>AGBO</strong>, étudiant passionné par l’hydrologie quantitative et par le développement web. J’évolue entre deux univers qui, en apparence,
+             n’ont rien en commun, mais qui me permettent de développer une vision unique : celle d’un esprit scientifique capable de créer, structurer et donner vie à des solutions modernes.
+Dans mon parcours en hydrologie, j’apprends à analyser les ressources en eau, comprendre les dynamiques hydrologiques et manipuler les données avec précision. 
+
+Parallèlement, je développe mes compétences en HTML, CSS et JavaScript, avec l’objectif de concevoir des interfaces élégantes, intuitives et adaptées aux besoins des utilisateurs.
+
+Ce double cheminement nourrit ma créativité et renforce ma rigueur.
+J’aime autant modéliser des systèmes hydrologiques que imaginer des expériences web modernes.
+Chaque projet est pour moi une occasion de rapprocher la science de la donnée et la créativité du code.
+
+Toujours curieux, motivé et ouvert à l’apprentissage, je continue d’explorer, d’expérimenter et de progresser, avec une ambition simple : transformer mes connaissances en projets concrets et utiles.</p>
+          <a class="btn btn-outline" href="documents\mon_CV.pdf" target="_blank" rel="noopener">Télécharger mon CV</a>
+        </div>
+        <div class="about__photo">
+          <img src="images\photo1.jpg" alt="Photo de profil">
+        </div>
+      </div>
+    </section>
+
+    <!-- Projets -->
+    <section id="projects" class="section">
+      <div class="container">
+        <h2 class="section-title center">Mes Projets</h2>
+        <div class="cards">
+          <article class="card">
+            <p>Calculateur de prêt hypothécaire 💸</p>
+            <small>#html, #css, #js</small>
+
+            <a href="projets\Calculateur_de_pret_hypothecaire.html" class="btn btn-accent">Voir</a>
+          </article>
+          <article class="card">
+            <p>Aim Trainer🎯</p>
+            <small>#html, #css, #js</small>
+            <a href="projets\mini_jeu_de_reflexe_et_de_precision.html" class="btn btn-accent">Voir</a>
+          </article>
+          <article class="card">
+            <p>Memory Match 🎗️</p>
+            <small>#html, #css, #js</small>
+            <a href="projets\mini_jeu_de_carte_a_retourner.html" class="btn btn-accent">Voir</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compétences -->
+    <section id="skills" class="section section-muted">
+      <div class="container">
+          <h2 class="bleu-ciel" style="text-align:center;margin-bottom:40px;">Mes Compétences</h2>
+          <div class="competences-list">
+            <div class="competence-block">
+              <h3>Soft Skills</h3>
+              <div class="skill-bar-group">
+                <div class="skill-label">Gestion de projet</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="60%" style="width:0"></div>
+                </div>
+              </div>
+              <div class="skill-bar-group">
+                <div class="skill-label">Résolution de problème</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="60%" style="width:0"></div>
+                </div>
+              </div>
+              <div class="skill-bar-group">
+                <div class="skill-label">Adaptabilité</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="80%" style="width:0"></div>
+                </div>
+              </div>
+            </div>
+            <div class="competence-block">
+              <h3>Hard Skills</h3>
+              <div class="skill-bar-group">
+                <div class="skill-label">HTML</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="50%" style="width:0"></div>
+                </div>
+              </div>
+              <div class="skill-bar-group">
+                <div class="skill-label">CSS</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="50%" style="width:0"></div>
+                </div>
+              </div>
+              <div class="skill-bar-group">
+                <div class="skill-label">JavaScript</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="50%" style="width:0"></div>
+                </div>
+              </div>
+              <div class="skill-bar-group">
+                <div class="skill-label">VS Code</div>
+                <div class="skill-bar">
+                  <div class="skill-bar-fill" data-width="70%" style="width:0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section section-contrast">
+      <div class="container contact">
+        <div class="contact__head">
+          <h2>Vous avez un <span class="accent">projet</span> en tête&nbsp;?<br/>N'hésitez pas à me <span class="accent">contacter</span></h2>
+        </div>
+        <!-- Formulaire -->
+        <form id="contactForm" class="contact__form" action="mailto:vivienagbo56@gmail.com" method="post" enctype="text/plain">
+          <div class="grid-2">
+            <label>Votre prénom
+              <input type="text" name="prenom" required placeholder="John"/>
+            </label>
+            <label>Votre nom
+              <input type="text" name="nom" required placeholder="Doe"/>
+            </label>
+          </div>
+          <label>Votre sujet
+            <input type="text" name="sujet" required placeholder="Développement d'un site vitrine"/>
+          </label>
+          <label>Votre message
+            <textarea name="message" rows="6" required placeholder="Écrivez votre message ici..."></textarea>
+          </label>
+          <button type="submit" class="btn btn-accent">Envoyer</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Pied de page -->
+  <footer class="footer">
+    <div class="container footer__content">
+      <small>Designed by <span class="accent">Juste AGBO</span> with HTML, CSS, JS</small>
+      <small>Tous droits réservés — 2025</small>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

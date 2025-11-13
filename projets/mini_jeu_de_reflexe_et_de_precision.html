@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="author" content="AGBO Juste">
+<meta name="date" content="2025-11-11">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini-jeu de reflexe de reflexe et de precision</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --text:#0f172a;
+    --accent:#38bdf8;
+    --accent-dark:#0891b2;
+    --panel:#f9fafb;
+    --shadow:0 8px 20px rgba(0,0,0,.1);
+  }
+  *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Poppins,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{display:grid;grid-template-columns:300px 1fr;gap:20px;width:min(1100px,95%);margin:40px auto}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid #e5e7eb;border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+  h2{margin-top:0}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+  .stat{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;text-align:center;flex:1}
+  .n{font-weight:700;font-size:1.2rem}
+  .btn{padding:10px 18px;border-radius:10px;border:none;font-weight:600;cursor:pointer;transition:.2s}
+  .btn-main{background:var(--accent);color:#fff}
+  .btn-main:hover{background:var(--accent-dark)}
+  .btn-secondary{background:#e0f2fe;color:#0369a1}
+  .btn-secondary:hover{background:#bae6fd}
+  .board{position:relative;min-height:500px;border:2px dashed #bae6fd;border-radius:16px;overflow:hidden;background:#f0f9ff}
+  .target{position:absolute;width:70px;height:70px;border-radius:50%;display:grid;place-items:center;
+          background:radial-gradient(circle at 30% 30%, #7bdcff, #22aee6 70%);color:#fff;
+          font-weight:700;cursor:pointer;user-select:none;transform:translate(-50%,-50%) scale(0.9);
+          transition:transform .1s ease}
+  .target:active{transform:translate(-50%,-50%) scale(0.8)}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+           background:rgba(255,255,255,.9);backdrop-filter:blur(4px)}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;text-align:center;box-shadow:var(--shadow)}
+  .toast{position:absolute;left:50%;top:10px;transform:translateX(-50%);
+         background:#0ea5c0;color:#fff;padding:6px 14px;border-radius:8px;opacity:0;
+         animation:fade .8s ease forwards}
+  @keyframes fade{0%{opacity:0;transform:translate(-50%,-10px)}100%{opacity:1;transform:translate(-50%,0)}}
+
+  /* ========== Footer ========== */
+.footer{background:skyblue;color:#e5e7eb}
+.footer__content{display:flex;justify-content:space-between;align-items:center;height:60px}
+@media(max-width:600px){.footer__content{flex-direction:column;gap:6px;height:auto;padding:10px 0}}
+.accent{color:#0369a1;font-weight:600}  
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="panel">
+    <h2>Aim Trainer🎯</h2>
+    <p>Clique les cibles pour marquer des points et améliorer ton combo.</p>
+    <div class="row">
+      <div class="stat"><small>Score</small><div class="n" id="score">0</div></div>
+      <div class="stat"><small>Combo</small><div class="n" id="combo">x1</div></div>
+      <div class="stat"><small>Temps</small><div class="n" id="time">30</div></div>
+    </div>
+    <div class="row">
+      <button class="btn btn-main" id="startBtn">Démarrer</button>
+      <button class="btn btn-secondary" id="resetBtn">Réinitialiser</button>
+    </div>
+  </aside>
+
+  <section class="board" id="board">
+    <div class="overlay" id="overlay">
+      <div class="card">
+        <h3>Prêt ?</h3>
+        <p>Appuie sur <b>Commencer</b> pour débuter la partie.</p>
+        <button class="btn btn-main" id="go">Commencer</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const board=document.getElementById('board');
+const overlay=document.getElementById('overlay');
+const startBtn=document.getElementById('startBtn');
+const resetBtn=document.getElementById('resetBtn');
+const go=document.getElementById('go');
+const scoreEl=document.getElementById('score');
+const comboEl=document.getElementById('combo');
+const timeEl=document.getElementById('time');
+
+let score=0,combo=1,timeLeft=30,running=false,timer=null,spawnTimer=null;
+
+function reset(){
+  running=false;score=0;combo=1;timeLeft=30;
+  scoreEl.textContent=0;comboEl.textContent='x1';timeEl.textContent=timeLeft;
+  clearInterval(timer);clearInterval(spawnTimer);
+  [...board.querySelectorAll('.target,.toast')].forEach(e=>e.remove());
+  overlay.hidden=false;
+}
+
+function start(){
+  if(running) return;
+  overlay.style.display='none'; 
+  running=true;
+  timer=setInterval(()=>{
+    timeLeft--;timeEl.textContent=timeLeft;
+    if(timeLeft<=0) end();
+  },1000);
+  spawnTimer=setInterval(spawn,900);
+  toast("Go !");
+}
+
+function end(){
+  running=false;
+  clearInterval(timer);clearInterval(spawnTimer);
+  [...board.querySelectorAll('.target')].forEach(t=>t.remove());
+  overlay.style.display='flex';
+  overlay.innerHTML=`<div class="card"><h3>Terminé !</h3>
+  <p>Score : <b>${score}</b></p>
+  <button class="btn btn-main" id="restart">Rejouer</button></div>`;
+  document.getElementById('restart').onclick=()=>{overlay.innerHTML=document.querySelector('.card').innerHTML;reset();overlay.querySelector('button')?.remove();overlay.style.display='none';start();};
+}
+
+function spawn(){
+  const t=document.createElement('div');
+  t.className='target';
+  const rect=board.getBoundingClientRect();
+  const x=Math.random()*(rect.width-60)+30;
+  const y=Math.random()*(rect.height-60)+30;
+  t.style.left=x+'px';t.style.top=y+'px';
+  board.appendChild(t);
+  t.onclick=()=>{score+=combo;scoreEl.textContent=score;combo++;comboEl.textContent='x'+combo;t.remove();toast('+'+combo)};
+  setTimeout(()=>t.remove(),1000);
+}
+
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  board.appendChild(t);setTimeout(()=>t.remove(),800);
+}
+
+startBtn.onclick=start;
+resetBtn.onclick=reset;
+go.onclick=start;
+reset();
+</script>
+<div style="text-align:center;margin-top:2px;">
+    <a href="../index.html" class="btn">Retour à l'accueil</a>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__content">
+      <small>Designed by <span class="accent">Juste AGBO</span> with HTML, CSS, JS</small>
+      <small>Tous droits réservés — 2025</small>
+    </div>
+  </footer>
+</body>
+</html>
